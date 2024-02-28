@@ -1,5 +1,6 @@
 library(shiny)
 library(shinythemes)
+library(emojifont)
 
 ui <- fluidPage(
   shinythemes::themeSelector(),
@@ -37,7 +38,7 @@ ui <- fluidPage(
         img("../Images/rules_02.jpg"),
         br(),
         h3('Passer en mode "hypothèse"'),
-        h5("Il se peut qu'à un moment donné vous soyez bloqué(e), vous ne savez plus quelles cases noircir. Vous pouvez alors passer en mode hypothèse. Ce mode modifie la couleur des cases que vous allez noircir et éliminer afin de facilement les repérer si vous vous trompez par la suite.
+        h5("Il se peut qu'à un moment donné vous soyez bloqué(e), vous ne savez plus quelles cases noircir. Vous pouvez alors passer en mode hypothèse. Ce mode mets des petits chameaux sur les cases que vous allez noircir et éliminer afin de facilement les repérer si vous vous trompez par la suite.
 Ce mode vous permet de partir d'une hypothèse afin de progresser dans la résolution du", strong("Picross"), "et de pouvoir revenir en arrière.")
       )
     ),
