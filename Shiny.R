@@ -34,7 +34,7 @@ ui <- fluidPage(
         h5("Le but d'un ", strong("Picross")," est de noircir les cases de la grille afin de faire apparaître une image, un dessin. Les nombres à gauche et au-dessus de la grille sont là pour vous aider à déduire les cases à noircir."),
         hr(),
         h5("La séquence 3 2 signifie qu'il y a au moins une case vide entre une séquence de trois cases à noircir et une autre séquence de deux cases à noircir."),
-        img("../Images/rules_02.jpg"),
+        img(src="./Images/rules_02.jpg",width=25,height=25),
         br(),
         h3('Passer en mode "hypothèse"'),
         h5("Il se peut qu'à un moment donné vous soyez bloqué(e), vous ne savez plus quelles cases noircir. Vous pouvez alors passer en mode hypothèse. Ce mode modifie la couleur des cases que vous allez noircir et éliminer afin de facilement les repérer si vous vous trompez par la suite.
