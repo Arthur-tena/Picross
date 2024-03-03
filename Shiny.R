@@ -3,7 +3,7 @@ library(shinythemes)
 
 ui <- fluidPage(
   shinythemes::themeSelector(),
-  titlePanel("Picross"),
+  titlePanel("Grille Cliquable"),
   sidebarLayout(
     sidebarPanel(
       tabsetPanel(
@@ -41,16 +41,90 @@ ui <- fluidPage(
 Ce mode vous permet de partir d'une hypothèse afin de progresser dans la résolution du", strong("Picross"), "et de pouvoir revenir en arrière.")
       )
     ),
-    mainPanel(tabsetPanel(
-      tabPanel("Jeu", h2("Jeu du PICROSS")),
-      tabPanel("Statistiques", "Il y aura les stats ici")
+    mainPanel(tabsetPanel(tabPanel("Jeu",
+                                   fluidRow(
+                                     column(12,
+                                            uiOutput("grid"),  # Utilisation de la fonction uiOutput pour afficher la grille
+                                            verbatimTextOutput("cliquees_list")
+                                     ))),
+                          tabPanel("Statistiques", "Il y aura les stats ici")
     )
-  )
+    )
   )
 )
 
+
 server <- function(input, output) {
   
+  cases_cliquees <- reactiveVal(integer(0))
+  
+  observe({
+    if (!is.null(input$taille)) {
+      if (input$taille >= 10) {
+        output$grid <- renderUI({
+          grid <- matrix(
+            # Créer chaque case cliquable
+            lapply(1:(input$taille^2), function(i) {
+              actionButton(inputId = paste0("button_", i), label = "", #class = "btn-sn", #btn-lg et btn-md
+                           style = if(i %in% cases_cliquees()) "width: 25px; height: 25px; margin: 1px; background-color: black;" else "width: 25px; height: 25px; margin: 1px;"
+              )
+            }),
+            nrow = input$taille, ncol = input$taille, byrow = TRUE
+          )
+          # Mettre en forme la matrice en liste
+          grid_list <- lapply(1:input$taille, function(i) {
+            fluidRow(do.call(tagList, grid[i, ]))
+          })
+          do.call(tagList, grid_list)
+        })
+      } else {
+        output$grid <- renderUI({
+          grid <- matrix(
+            # Créer chaque case cliquable
+            lapply(1:(input$taille^2), function(i) {
+              actionButton(inputId = paste0("button_", i), label = "", #class ="btn-sn",
+                           style = if(i %in% cases_cliquees()) "width: 50px; height: 50px; margin: 5px; background-color: black;" else "width:50px; height: 50px; margin: 5px;"
+              )
+            }),
+            nrow = input$taille, ncol = input$taille, byrow = TRUE
+          )
+          # Mettre en forme la matrice en liste
+          grid_list <- lapply(1:input$taille, function(i) {
+            fluidRow(do.call(tagList, grid[i, ]))
+          })
+          do.call(tagList, grid_list)
+        })
+      }
+    }
+  })
+  
+  # Observer pour réagir aux clics sur les boutons
+  observeEvent(input$grid, {
+    clicked_button <- as.numeric(substr(input$grid, 8, nchar(input$grid)))
+    # Faire quelque chose avec le bouton cliqué
+    print(paste("Bouton", clicked_button, "cliqué !"))
+    
+    # Mettre à jour la liste des cases cliquées
+    cases_cliquees(c(clicked_button, cases_cliquees()))
+    print(cases_cliquees())
+    cat(cases_cliquees())
+    #cases_cliquees(cases_cliquees(),clicked_button)
+    
+    # Mettre à jour la grille en utilisant une invalidation forcée (invalidateLater)
+    invalidateLater(0)
+    
+    #Laisser la case en noir
+    #updateActionButton(
+    #  session = getDefaultReactiveDomain(),
+    #  inputId = paste0("button_",clicked_button),
+    #  style = "background-color: black; color: white;"
+    #)
+  })
+  # Observer pour afficher la liste des cases cliquées
+  output$cliquees_list <- renderPrint({
+    isolate(cases_cliquees())
+  })
 }
 
-shinyApp(ui = ui, server = server)
+shinyApp(ui, server)
+
