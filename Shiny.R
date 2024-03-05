@@ -23,7 +23,7 @@ ui <- fluidPage(
                       min = 5, max = 20,
                       value = 5, step = 1),
           br(),
-          actionButton('replay', "Rejouer")
+          actionButton('replay', "Rejouer", icon("refresh"))
         )
       ),
       conditionalPanel(
@@ -44,14 +44,13 @@ Ce mode vous permet de partir d'une hypothèse afin de progresser dans la résol
     ),
     mainPanel(tabsetPanel(
       tabPanel("Jeu", h2("Jeu du PICROSS")),
-      tabPanel("Statistiques", "Il y aura les stats ici")
-    )
+      tabPanel("Statistiques", checkboxGroupInput("show_vars", "Stats à regarder:"),"Il y aura les stats ici")
+    ),
+    plotOutput("grille", width = "600px" , height="400px")
   )
-  )
-)
+))
 
 server <- function(input, output) {
-  
 }
 
 shinyApp(ui = ui, server = server)
