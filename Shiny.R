@@ -65,7 +65,7 @@ server <- function(input, output) {
           grid <- matrix(
             # Créer chaque case cliquable
             lapply(1:(input$taille^2), function(i) {
-              actionButton(inputId = paste0("button_", i), label = "", #class = "btn-sn", #btn-lg et btn-md
+              actionButton(inputId = paste0("button_", i), label = "", class = c("btn-sn", if(i %in% cases_cliquees()) "case-cliquee" else ""), #btn-lg et btn-md
                            style = if(i %in% cases_cliquees()) "width: 25px; height: 25px; margin: 1px; background-color: black;" else "width: 25px; height: 25px; margin: 1px;"
               )
             }),
@@ -101,24 +101,38 @@ server <- function(input, output) {
   # Observer pour réagir aux clics sur les boutons
   observeEvent(input$grid, {
     clicked_button <- as.numeric(substr(input$grid, 8, nchar(input$grid)))
+    
+    # Afficher un message pour vérifier que l'événement est détecté
+    print(paste("Clic sur le bouton", clicked_button))
+    
     # Faire quelque chose avec le bouton cliqué
     print(paste("Bouton", clicked_button, "cliqué !"))
     
+    # Afficher la classe actuelle du bouton
+    current_class <- input[[paste0("button_", clicked_button)]]
+    print(paste("Classe actuelle:", current_class))
+    
     # Mettre à jour la liste des cases cliquées
-    cases_cliquees(c(clicked_button, cases_cliquees()))
-    print(cases_cliquees())
-    cat(cases_cliquees())
-    #cases_cliquees(cases_cliquees(),clicked_button)
+    toggle_class <- function(class_list, class_name) {
+      if (class_name %in% class_list) {
+        class_list <- setdiff(class_list, class_name)
+      } else {
+        class_list <- c(class_list, class_name)
+      }
+      return(class_list)
+    }
     
-    # Mettre à jour la grille en utilisant une invalidation forcée (invalidateLater)
-    invalidateLater(0)
+    current_classes <- toggle_class(class_list = current_class, class_name = "case-cliquee")
     
-    #Laisser la case en noir
-    #updateActionButton(
-    #  session = getDefaultReactiveDomain(),
-    #  inputId = paste0("button_",clicked_button),
-    #  style = "background-color: black; color: white;"
-    #)
+    # Afficher les classes mises à jour
+    print(paste("Nouvelles classes:", current_classes))
+    
+    # Mettre à jour la classe du bouton
+    updateActionButton(
+      session = getDefaultReactiveDomain(),
+      inputId = paste0("button_", clicked_button),
+      class = current_classes
+    )
   })
   # Observer pour afficher la liste des cases cliquées
   output$cliquees_list <- renderPrint({
