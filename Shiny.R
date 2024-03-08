@@ -60,17 +60,41 @@ Ce mode vous permet de partir d'une hypothèse afin de progresser dans la résol
 server <- function(input, output) {
   
   cases_cliquees <- reactiveVal(integer(0))
+  indices_cliques <- reactiveVal(list())
+  mode_hypothese <- reactiveVal(FALSE)
+  indices_hyp <- reactiveVal(list())
   
   observe({
     if (!is.null(input$taille)) {
+      observe({
+        lapply(1:(input$taille^2), function(i) {
+          observeEvent(input[[paste0("button_", i)]], {
+            if (input[[paste0("button_", i)]] > 0) {
+              if (mode_hypothese()) {
+                indices_hyp(c(indices_hyp(), i))
+              } else {
+                indices_cliques(c(indices_cliques(), i))
+              }
+            }
+          })
+        })
+      })
+      
+      observeEvent(input$hyp, {
+        mode_hypothese(input$hyp == "Oui")
+      })
       if (input$taille >= 10) {
         output$grid <- renderUI({
           grid <- matrix(
             # Créer chaque case cliquable
             lapply(1:(input$taille^2), function(i) {
-              actionButton(inputId = paste0("button_", i), label = "", class = c("btn-sn", if(i %in% cases_cliquees()) "case-cliquee" else ""), #btn-lg et btn-md
-                           style = if(i %in% cases_cliquees()) "width: 25px; height: 25px; margin: 1px; background-color: black;" else "width: 25px; height: 25px; margin: 1px;"
-              )
+              if (i %in% indices_hyp()) {
+                actionButton(inputId = paste0("button_", i), label = emoji('camel'), class = c("btn-sn", if(i %in% cases_cliquees()) "case-cliquee" else ""))
+              } else if (i %in% indices_cliques()) {
+                actionButton(inputId = paste0("button_", i), label = "", style = "background-color: black;", class = c("btn-sn", if(i %in% cases_cliquees()) "case-cliquee" else ""))
+              } else {
+                actionButton(inputId = paste0("button_", i), label = "", style = "", class = c("btn-sn", if(i %in% cases_cliquees()) "case-cliquee" else ""))
+              }
             }),
             nrow = input$taille, ncol = input$taille, byrow = TRUE
           )
@@ -85,9 +109,13 @@ server <- function(input, output) {
           grid <- matrix(
             # Créer chaque case cliquable
             lapply(1:(input$taille^2), function(i) {
-              actionButton(inputId = paste0("button_", i), label = "", #class ="btn-sn",
-                           style = if(i %in% cases_cliquees()) "width: 50px; height: 50px; margin: 5px; background-color: black;" else "width:50px; height: 50px; margin: 5px;"
-              )
+              if (i %in% indices_hyp()) {
+                actionButton(inputId = paste0("button_", i), label = emoji('camel'), class = c("btn-sn", if(i %in% cases_cliquees()) "case-cliquee" else ""))
+              } else if (i %in% indices_cliques()) {
+                actionButton(inputId = paste0("button_", i), label = "", style = "background-color: black;", class = c("btn-sn", if(i %in% cases_cliquees()) "case-cliquee" else ""))
+              } else {
+                actionButton(inputId = paste0("button_", i), label = "", style = "", class = c("btn-sn", if(i %in% cases_cliquees()) "case-cliquee" else ""))
+              }
             }),
             nrow = input$taille, ncol = input$taille, byrow = TRUE
           )
