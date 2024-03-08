@@ -55,89 +55,74 @@ Ce mode vous permet de partir d'une hypothèse afin de progresser dans la résol
 
 
 server <- function(input, output) {
-  
   cases_cliquees <- reactiveVal(integer(0))
+  indices_cliques <- reactiveVal(list())
   
   observe({
     if (!is.null(input$taille)) {
-      if (input$taille >= 10) {
-        output$grid <- renderUI({
-          grid <- matrix(
-            # Créer chaque case cliquable
-            lapply(1:(input$taille^2), function(i) {
-              actionButton(inputId = paste0("button_", i), label = "", class = c("btn-sn", if(i %in% cases_cliquees()) "case-cliquee" else ""), #btn-lg et btn-md
-                           style = if(i %in% cases_cliquees()) "width: 25px; height: 25px; margin: 1px; background-color: black;" else "width: 25px; height: 25px; margin: 1px;"
-              )
-            }),
-            nrow = input$taille, ncol = input$taille, byrow = TRUE
-          )
-          # Mettre en forme la matrice en liste
-          grid_list <- lapply(1:input$taille, function(i) {
-            fluidRow(do.call(tagList, grid[i, ]))
-          })
-          do.call(tagList, grid_list)
+      output$grid <- renderUI({
+        grid <- matrix(
+          # Créer chaque case cliquable
+          lapply(1:(input$taille^2), function(i) {
+            id <- paste0("button_", floor((i - 1) / input$taille) + 1, "_", (i - 1) %% input$taille + 1)
+            actionButton(inputId = id, label = "", 
+                         style = if (id %in% indices_cliques()) "width: 25px; height: 25px; margin: 1px; background-color: black;" else "width: 25px; height: 25px; margin: 1px;")
+          }),
+          nrow = input$taille, ncol = input$taille, byrow = TRUE
+        )
+        # Convertir la matrice en liste pour l'affichage
+        grid_list <- lapply(1:input$taille, function(i) {
+          fluidRow(do.call(tagList, grid[i, ]))
         })
-      } else {
-        output$grid <- renderUI({
-          grid <- matrix(
-            # Créer chaque case cliquable
-            lapply(1:(input$taille^2), function(i) {
-              actionButton(inputId = paste0("button_", i), label = "", #class ="btn-sn",
-                           style = if(i %in% cases_cliquees()) "width: 50px; height: 50px; margin: 5px; background-color: black;" else "width:50px; height: 50px; margin: 5px;"
-              )
-            }),
-            nrow = input$taille, ncol = input$taille, byrow = TRUE
-          )
-          # Mettre en forme la matrice en liste
-          grid_list <- lapply(1:input$taille, function(i) {
-            fluidRow(do.call(tagList, grid[i, ]))
-          })
-          do.call(tagList, grid_list)
-        })
-      }
+        do.call(tagList, grid_list)
+      })
     }
   })
   
-  # Observer pour réagir aux clics sur les boutons
-  observeEvent(input$grid, {
-    clicked_button <- as.numeric(substr(input$grid, 8, nchar(input$grid)))
-    
-    # Afficher un message pour vérifier que l'événement est détecté
-    print(paste("Clic sur le bouton", clicked_button))
-    
-    # Faire quelque chose avec le bouton cliqué
-    print(paste("Bouton", clicked_button, "cliqué !"))
-    
-    # Afficher la classe actuelle du bouton
-    current_class <- input[[paste0("button_", clicked_button)]]
-    print(paste("Classe actuelle:", current_class))
-    
-    # Mettre à jour la liste des cases cliquées
-    toggle_class <- function(class_list, class_name) {
-      if (class_name %in% class_list) {
-        class_list <- setdiff(class_list, class_name)
-      } else {
-        class_list <- c(class_list, class_name)
+  observe(true_matrice<-picross_grid(input$taille,0.5,0.5))
+  #reactive(
+  #  your_matrice<-matrix(0,nrow = input$taille,ncol = input$taille)
+  #  )
+  
+  observeEvent((input$button_1_1),{
+    print(("Message"))
+    #print(paste(input$grid))
+  })
+  ## idée: créer une liste réactive, stocker les indices cliqués dedans, pour chaque indice cliqué dans la
+  ## liste on affecte la valeur 1 à your_matrice et le background-color black au boutton
+  #your_matrice<-reactiveVal(matrix(0,nrow = input$taille,ncol = input$taille))
+  
+  
+  
+  observe({
+    true_matrice<-picross_grid(input$taille,0.5,0.5)  
+    modif_matrice <- function(i,j,val){
+      if(!is.null(your_matrice)){
+        mat<-your_matrice()
+        mat[i,j]<-val
+        your_matrice(mat)
       }
-      return(class_list)
     }
-    
-    current_classes <- toggle_class(class_list = current_class, class_name = "case-cliquee")
-    
-    # Afficher les classes mises à jour
-    print(paste("Nouvelles classes:", current_classes))
-    
-    # Mettre à jour la classe du bouton
-    updateActionButton(
-      session = getDefaultReactiveDomain(),
-      inputId = paste0("button_", clicked_button),
-      class = current_classes
-    )
+    your_matrice<-reactiveVal(matrix(0,nrow = input$taille,ncol = input$taille))
+    lapply(1:(input$taille), function(i){
+      lapply(1:(input$taille),function(j){
+        observeEvent(input[[paste0("button_",i,"_",j)]],{
+          print(paste0(i,j))
+          #case<-
+          indices_cliques(c(indices_cliques(),paste0("button_",i,"_",j)))
+          modif_matrice(i,j,1)
+          print(typeof(your_matrice))
+          mat<-your_matrice()
+          print(mat)
+          print(true_matrice)
+          
+        })
+      })
+    }) 
   })
-  # Observer pour afficher la liste des cases cliquées
-  output$cliquees_list <- renderPrint({
-    isolate(cases_cliquees())
-  })
+  
+  
+  
 }
 
 shinyApp(ui, server)
