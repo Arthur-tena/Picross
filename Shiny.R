@@ -82,47 +82,90 @@ server <- function(input, output) {
   indices_cliques <- reactiveVal(list())
   
   observe({
-    decallage <- floor(input$taille / 2) + 1
-    taille <- input$taille + decallage
+    count1row<-function(row,M){
+      n <- dim(M)[1]
+      m <- floor(n/2 +1)
+      s=0
+      rep<-c()
+      for(j in 1:n){
+        if(M[row,j]==1){if(j==n){s=s+1
+        rep=c(rep,s)}
+          else{s=s+1}
+        }
+        if(M[row,j]==0){
+          if(s!=0){rep=c(rep,s)
+          s=0}
+        }
+      }
+      if(length(rep)==m){return(paste0(rep))}
+      else {
+        for(i in 1:(m-length(rep))){
+          rep<-c("",rep)
+        }
+        return(paste0(rep))
+      }
+    }
+    
+    
+    count1col<-function(col,M){
+      n<-dim(M)[1]
+      m<-floor(n/2 +1)
+      s=0
+      rep=c()
+      for(i in 1:n){
+        if(M[i,col]==1){if(i==n){s=s+1
+        rep=c(rep,s)}
+          else{s=s+1}
+        }
+        if(M[i,col]==0){
+          if(s!=0){rep=c(rep,s)
+          s=0}
+        }
+      }
+      if(length(rep)==m){return(paste0(rep))}
+      else {
+        for(i in 1:(m-length(rep))){
+          rep<-c("",rep)
+        }
+        return(paste0(rep))
+      }
+    }
+    
+    true_matrice <- picross_grid(input$taille, 0.5, 0.5)
+    decallage<-floor(input$taille/2)+1
+    taille<-input$taille+decallage
     if (!is.null(input$taille)) {
       output$grid <- renderUI({
+        valeurs <- c(1, 2, 3)
+        
         grid <- matrix(
           # Créer chaque case cliquable
           lapply(1:(taille ^ 2), function(i) {
             ligne <- floor((i - 1) / taille) + 1
             colonne <- (i - 1) %% taille + 1
-            id <-
-              paste0("button_",
-                     ligne,
-                     "_",
-                     colonne)
+            zone_morte <- ((ligne %in% 1:decallage && colonne %in% 1:decallage))
+            zone_ligne <- (ligne %in% (decallage+1):taille && colonne %in% 1:decallage)
+            id <- paste0("button_", ligne, "_", colonne)
+            zone_colonne <- (colonne %in% (decallage+1):taille && ligne %in% 1:decallage)
+            
             actionButton(
               inputId = id,
-              label = if ((ligne %in% 1:taille &&
-                           colonne %in% 1:decallage) ||
-                          (ligne %in% 1:decallage && colonne %in% 1:taille))
-                "1"
-              else
-                "",
-              #styleclass="blank",
+              label = if(zone_ligne){count1row(ligne-decallage,true_matrice)[colonne]}
+              else {if(zone_colonne){count1col(colonne-decallage,true_matrice)[ligne]} else ""},
+              
+              # label = if(zone_ligne){valeurs[colonne]}
+              # else {if(zone_colonne){valeurs[ligne]} else ""},
               style = if (id %in% indices_cliques()) {
-                if (((ligne %in% 1:taille &&
-                      colonne %in% 1:decallage) ||
-                     (ligne %in% 1:decallage && colonne %in% 1:taille)
-                ))
-                  "width: 25px; height: 25px; margin: 0px; padding:0px; background-color: black; text-align: center; border: none;"
-                else
-                  "width: 25px; height: 25px; margin: 0px; padding:0px; background-color: black;"
-              }
-              else{
-                if (!((ligne %in% 1:taille &&
-                       colonne %in% 1:decallage) ||
-                      (ligne %in% 1:decallage && colonne %in% 1:taille)
-                )) {
-                  "width: 25px; height: 25px; margin: 0px; padding: 0px;"
+                "width: 25px; height: 25px; margin: 0px; padding:0px; background-color: black;"
+              } else {
+                if (((ligne %in% (decallage + 1):taille && colonne %in% 1:decallage) ||
+                     (ligne %in% 1:decallage && colonne %in% (decallage + 1):taille))) {
+                  "width: 25px; height: 25px; margin: 0px; padding: 0px; text-align: center; border: none;"
+                } else {
+                  if (zone_morte) {
+                    "width: 25px; height: 25px; margin: 0px; padding:0px; border: none;"
+                  } else "width: 25px; height: 25px; margin: 0px; padding:0px;"
                 }
-                else
-                  "width: 25px; height: 25px; margin: 0px; padding:0px; text-align: center; border: none;"
               }
             )
           }),
@@ -132,16 +175,13 @@ server <- function(input, output) {
         )
         
         # Convertir la matrice en liste pour l'affichage
-        # Convertir la matrice en liste pour l'affichage
         grid_list <- lapply(1:taille, function(i) {
           fluidRow(do.call(tagList, grid[i, ]))
         })
         do.call(tagList, grid_list)
-        
-        
       })
+      
     }
-    true_matrice <- picross_grid(input$taille, 0.5, 0.5)
     modif_matrice <- function(i, j, val) {
       if (!is.null(your_matrice)) {
         mat <- your_matrice()
@@ -154,10 +194,10 @@ server <- function(input, output) {
     lapply(3:(taille), function(i) {
       lapply(1:(taille), function(j) {
         observeEvent(input[[paste0("button_", i, "_", j)]], {
-          print(paste0(i - decallage, j - decallage))
+          print(paste0(i-decallage, j-decallage))
           #case<-
           indices_cliques(c(indices_cliques(), paste0("button_", i, "_", j)))
-          modif_matrice(i - decallage, j - decallage, 1)
+          modif_matrice(i-decallage, j-decallage, 1)
           #print(typeof(your_matrice))
           mat <- your_matrice()
           print(mat)
@@ -172,7 +212,17 @@ server <- function(input, output) {
   ## liste on affecte la valeur 1 à your_matrice et le background-color black au boutton
   #your_matrice<-reactiveVal(matrix(0,nrow = input$taille,ncol = input$taille))
   
+  
+  ## à la ligne decallage dans la colonne 1 on stocke la première valeur du vecteur count1row
+  ##                                      2 on stocke la deuxième valeur...
+  ## ainsi de suite jusqu'à la colonne decallage
+  ## --> traiter séparemment les lignes et les colonnes, par ex pour les lignes on peut accéder à la ligne
+  ## et attribuer la valeur numéro 'colonne' de count1row. Faire une "zone ligne" et une "zone colonne"
+  ## donc modifier count1row et count1col pour remplir le vecteur de "" de sorte à atteindre la taille decallage
+  ## zone_ligne <- (ligne %in% (decallage+1):taille && colonne %in% 1:decallage) 
+  ## zone_colonne <- (colonne %in% (decallage+1):taille && ligne %in% 1:decallage)
+  
+  
 }
-
 
 shinyApp(ui, server)
