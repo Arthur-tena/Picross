@@ -206,6 +206,7 @@ server <- function(input, output) {
     lapply(3:(taille), function(i) {
       lapply(1:(taille), function(j) {
         observeEvent(input[[paste0("button_", i, "_", j)]], {
+          if (mode_hypothese()==FALSE) {
           print(paste0(i-decallage, j-decallage))
           #case<-
           indices_cliques(c(indices_cliques(), paste0("button_", i, "_", j)))
@@ -214,14 +215,12 @@ server <- function(input, output) {
           mat <- your_matrice()
           print(mat)
           print(true_matrice)
-        })
-        observeEvent(input[[paste0("button_", i, "_", j)]],{
-          if (mode_hypothese()) {
-            if (!(i %in% indices_hyp())) {
-              indices_hyp(c(indices_hyp(), paste0("button_", i, "_", j)))
-            }
+        }
+          else if(mode_hypothese()){
+            indices_hyp(c(indices_hyp(), paste0("button_", i, "_", j)))
           }
-        })
+          }
+        )
       })
     })
   })
