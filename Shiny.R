@@ -29,7 +29,9 @@ ui <- fluidPage(
             step = 1
           ),
           br(),
-          actionButton('replay', "Rejouer")
+          actionButton('replay', "Rejouer"),
+          br(),
+          actionButton('verification','Verification')
         )
       ),
       conditionalPanel(
@@ -69,7 +71,8 @@ Ce mode vous permet de partir d'une hypothèse afin de progresser dans la résol
                fluidRow(
                  column(12,
                         uiOutput("grid"),  # Utilisation de la fonction uiOutput pour afficher la grille
-                        verbatimTextOutput("cliquees_list"))
+                        verbatimTextOutput("cliquees_list"),
+                        verbatimTextOutput('verif',placeholder=TRUE))
                )),
       tabPanel("Statistiques", "Il y aura les stats ici")
     ))
@@ -131,12 +134,30 @@ server <- function(input, output) {
       }
     }
     
-    true_matrice <- picross_grid(input$taille, 0.5, 0.5)
+    comparaison <- function(M,Q){
+      if(dim(M)[1]!=dim(Q)[1] || dim(M)[2] != dim(Q)[2]){return("les matrices ne sont pas de même dimension")}
+      else {
+        result=TRUE
+        for(i in 1: dim(M)[1]){
+          for(j in 1:dim(M)[2]){
+            if(M[i,j]!=Q[i,j]){result = FALSE}
+          }
+        }
+        return(result)}
+    }
+    
+    if(input$diff1=="Facile"){true_matrice<-picross_grid(input$taille,0.25,0.75)}
+    else {if(input$diff1=="Normal"){true_matrice<-picross_grid(input$taille,0.5,0.5)}
+      else { if(input$diff1=="Difficile"){true_matrice <- picross_grid(input$taille,0.6,0.4)}
+        else {true_matrice<-picross_grid(input$taille,0.75,0.25)}}}
+    
+    # your_matrice <- reactiveVal(matrix(0, nrow = input$taille, ncol = input$taille))
+    # mat<-your_matrice()
+    
     decallage<-floor(input$taille/2)+1
     taille<-input$taille+decallage
     if (!is.null(input$taille)) {
       output$grid <- renderUI({
-        valeurs <- c(1, 2, 3)
         
         grid <- matrix(
           # Créer chaque case cliquable
@@ -155,7 +176,8 @@ server <- function(input, output) {
               
               # label = if(zone_ligne){valeurs[colonne]}
               # else {if(zone_colonne){valeurs[ligne]} else ""},
-              style = if (id %in% indices_cliques()) {
+              style = if (id %in% indices_cliques()){
+                #style = if (mat[ligne-decallage,colonne-decallage]==1) {
                 "width: 25px; height: 25px; margin: 0px; padding:0px; background-color: black;"
               } else {
                 if (((ligne %in% (decallage + 1):taille && colonne %in% 1:decallage) ||
@@ -167,6 +189,7 @@ server <- function(input, output) {
                   } else "width: 25px; height: 25px; margin: 0px; padding:0px;"
                 }
               }
+              #tags$style(HTML(paste0("#",id," {border-radius: 0;}")))
             )
           }),
           nrow = taille,
@@ -189,22 +212,48 @@ server <- function(input, output) {
         your_matrice(mat)
       }
     }
+    
+    removeElement <- function(elementToRemove) {
+      currentList <- indices_cliques()
+      updatedList <- currentList[currentList != elementToRemove]
+      indices_cliques(updatedList)
+    }
+    
     your_matrice <-
       reactiveVal(matrix(0, nrow = input$taille, ncol = input$taille))
     lapply(3:(taille), function(i) {
       lapply(1:(taille), function(j) {
         observeEvent(input[[paste0("button_", i, "_", j)]], {
+          id<-paste0("button_", i, "_", j)
           print(paste0(i-decallage, j-decallage))
           #case<-
-          indices_cliques(c(indices_cliques(), paste0("button_", i, "_", j)))
-          modif_matrice(i-decallage, j-decallage, 1)
-          #print(typeof(your_matrice))
-          mat <- your_matrice()
-          print(mat)
-          print(true_matrice)
-          
+          #indices_cliques(indices_cliques()[-which(indices_cliques() == paste0("button_", i))])
+          # indices_cliques(indices_cliques()[-which(indices_cliques()==paste0("button_", i, "_", j))])
+          # modif_matrice(i-decallage,j-decallage,0)
+          #
+          if(id %in% indices_cliques()){
+            removeElement(id)
+            modif_matrice(i-decallage, j-decallage, 0)
+            mat <- your_matrice()
+            print(mat)
+          }
+          else{
+            indices_cliques(c(indices_cliques(), paste0("button_", i, "_", j)))
+            modif_matrice(i-decallage, j-decallage, 1)
+            #print(typeof(your_matrice))
+            mat <- your_matrice()
+            print(mat)
+            print(true_matrice)
+            print(mat[i-decallage,j-decallage])
+          }
         })
       })
+    })
+    observeEvent(input$verification,{
+      if(comparaison(true_matrice,your_matrice())){
+        output$verif<-renderText({"Bravo !"})
+      }
+      else output$verif<-renderText("Perdu !")
     })
   })
   
@@ -225,4 +274,6 @@ server <- function(input, output) {
   
 }
 
+
 shinyApp(ui, server)
+
