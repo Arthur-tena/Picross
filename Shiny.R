@@ -29,7 +29,9 @@ ui <- fluidPage(
             step = 1
           ),
           br(),
-          actionButton('replay', "Rejouer")
+          actionButton('replay', "Rejouer"),
+          hr(),
+          radioButtons('hyp', " Passer en mode hypothèse :", c("Oui", "Non"), selected="Non")
         )
       ),
       conditionalPanel(
@@ -50,7 +52,7 @@ ui <- fluidPage(
           "La séquence 3 2 signifie qu'il y a au moins une case vide entre une séquence de trois cases à noircir et une autre séquence de deux cases à noircir."
         ),
         img(
-          src = "./Images/rules_02.jpg",
+          src = "./www/rules_02.jpg",
           width = 25,
           height = 25
         ),
@@ -78,8 +80,9 @@ Ce mode vous permet de partir d'une hypothèse afin de progresser dans la résol
 
 
 server <- function(input, output) {
-  cases_cliquees <- reactiveVal(integer(0))
   indices_cliques <- reactiveVal(list())
+  indices_hyp <- reactiveVal(list())
+  mode_hypothese <- reactiveVal(FALSE) 
   
   observe({
     count1row<-function(row,M){
@@ -157,7 +160,11 @@ server <- function(input, output) {
               # else {if(zone_colonne){valeurs[ligne]} else ""},
               style = if (id %in% indices_cliques()) {
                 "width: 25px; height: 25px; margin: 0px; padding:0px; background-color: black;"
-              } else {
+              } 
+              else if (id %in% indices_hyp()){
+                "width: 25px; height: 25px; margin: 0px; padding:0px; background-color: blue;"
+              }
+              else {
                 if (((ligne %in% (decallage + 1):taille && colonne %in% 1:decallage) ||
                      (ligne %in% 1:decallage && colonne %in% (decallage + 1):taille))) {
                   "width: 25px; height: 25px; margin: 0px; padding: 0px; text-align: center; border: none;"
@@ -189,6 +196,11 @@ server <- function(input, output) {
         your_matrice(mat)
       }
     }
+    
+    observeEvent(input$hyp, {
+      mode_hypothese(input$hyp == "Oui")
+    })
+    
     your_matrice <-
       reactiveVal(matrix(0, nrow = input$taille, ncol = input$taille))
     lapply(3:(taille), function(i) {
@@ -202,7 +214,13 @@ server <- function(input, output) {
           mat <- your_matrice()
           print(mat)
           print(true_matrice)
-          
+        })
+        observeEvent(input[[paste0("button_", i, "_", j)]],{
+          if (mode_hypothese()) {
+            if (!(i %in% indices_hyp())) {
+              indices_hyp(c(indices_hyp(), paste0("button_", i, "_", j)))
+            }
+          }
         })
       })
     })
