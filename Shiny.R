@@ -31,7 +31,10 @@ ui <- fluidPage(
           br(),
           actionButton('replay', "Rejouer"),
           br(),
-          actionButton('verification','Verification')
+          actionButton('verification','Verification'),
+
+          hr(),
+          radioButtons('hyp', " Passer en mode hypothèse :", c("Oui", "Non"), selected="Non")
         )
       ),
       conditionalPanel(
@@ -52,7 +55,7 @@ ui <- fluidPage(
           "La séquence 3 2 signifie qu'il y a au moins une case vide entre une séquence de trois cases à noircir et une autre séquence de deux cases à noircir."
         ),
         img(
-          src = "./Images/rules_02.jpg",
+          src = "./www/rules_02.jpg",
           width = 25,
           height = 25
         ),
@@ -81,8 +84,9 @@ Ce mode vous permet de partir d'une hypothèse afin de progresser dans la résol
 
 
 server <- function(input, output) {
-  cases_cliquees <- reactiveVal(integer(0))
   indices_cliques <- reactiveVal(list())
+  indices_hyp <- reactiveVal(list())
+  mode_hypothese <- reactiveVal(FALSE) 
   
   observe({
     count1row<-function(row,M){
@@ -179,7 +183,11 @@ server <- function(input, output) {
               style = if (id %in% indices_cliques()){
                 #style = if (mat[ligne-decallage,colonne-decallage]==1) {
                 "width: 25px; height: 25px; margin: 0px; padding:0px; background-color: black;"
-              } else {
+              } 
+              else if (id %in% indices_hyp()){
+                "width: 25px; height: 25px; margin: 0px; padding:0px; background-color: blue;"
+              }
+              else {
                 if (((ligne %in% (decallage + 1):taille && colonne %in% 1:decallage) ||
                      (ligne %in% 1:decallage && colonne %in% (decallage + 1):taille))) {
                   "width: 25px; height: 25px; margin: 0px; padding: 0px; text-align: center; border: none;"
@@ -218,6 +226,9 @@ server <- function(input, output) {
       updatedList <- currentList[currentList != elementToRemove]
       indices_cliques(updatedList)
     }
+    observeEvent(input$hyp, {
+      mode_hypothese(input$hyp == "Oui")
+    })
     
     your_matrice <-
       reactiveVal(matrix(0, nrow = input$taille, ncol = input$taille))
@@ -247,6 +258,21 @@ server <- function(input, output) {
             print(mat[i-decallage,j-decallage])
           }
         })
+          if (mode_hypothese()==FALSE) {
+          print(paste0(i-decallage, j-decallage))
+          #case<-
+          indices_cliques(c(indices_cliques(), paste0("button_", i, "_", j)))
+          modif_matrice(i-decallage, j-decallage, 1)
+          #print(typeof(your_matrice))
+          mat <- your_matrice()
+          print(mat)
+          print(true_matrice)
+        }
+          else if(mode_hypothese()){
+            indices_hyp(c(indices_hyp(), paste0("button_", i, "_", j)))
+          }
+          }
+        )
       })
     })
     observeEvent(input$verification,{
