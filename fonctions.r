@@ -12,11 +12,7 @@ picross_grid <- function(n,p,q){
 ## n: "int": taille de la matrice (carré)
 ## p: "float": proba associée au 0
 ## q: "float": proba associée au 1
-M<-picross_grid(6,1/2,1/2)
-M
-dim(M)
-floor(length(M[1,])/2 +1)
-rep("",3)
+print(picross_grid(5,0,1))
 
 
 ## compter les 1 consécutifs sur une ligne
@@ -46,9 +42,9 @@ count1row<-function(row,M){
 
 ### ARGS: 
 ## row : "int": la ligne sur laquelle on compte
+## M: "matrix": la matrice dans laquelle on compte
 
-M
-count1row(1,M)
+
 
 ## compter les 1 consécutifs sur une colonne
 count1col<-function(col,M){
@@ -76,9 +72,28 @@ count1col<-function(col,M){
 }
 ### ARGS: 
 ## col : "int": la colonne sur laquelle on compte
+## M : "matrix": la matrix dans laquelle on compte
 
+M<-picross_grid(5,0.5,0.5)
+Q <- M
 
-M
-count1col(1,M)
-count1row(4,M)
-paste0(c(1,2),"","")
+dim(M)==dim(Q)
+
+comparaison <- function(M,Q){
+  if(dim(M)[1]!=dim(Q)[1] || dim(M)[2] != dim(Q)[2]){return("les matrices ne sont pas de même dimension")}
+  else {
+    result=TRUE
+    for(i in 1: dim(M)[1]){
+      for(j in 1:dim(M)[2]){
+        if(M[i,j]!=Q[i,j]){result = FALSE}
+      }
+    }
+  return(result)}
+}
+comparaison(M,Q)
+
+observe({
+matrice <-reactiveVal(matrix(0, nrow = 5, ncol = 5))
+matrice2<-matrice()
+print(matrice2)
+})
