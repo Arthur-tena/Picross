@@ -226,6 +226,12 @@ server <- function(input, output) {
       updatedList <- currentList[currentList != elementToRemove]
       indices_cliques(updatedList)
     }
+    removeHyp <- function(elementToRemove) {
+      currentList <- indices_hyp()
+      updatedList <- currentList[currentList != elementToRemove]
+      indices_hyp(updatedList)
+    }
+    
     observeEvent(input$hyp, {
       mode_hypothese(input$hyp == "Oui")
     })
@@ -242,6 +248,7 @@ server <- function(input, output) {
           # indices_cliques(indices_cliques()[-which(indices_cliques()==paste0("button_", i, "_", j))])
           # modif_matrice(i-decallage,j-decallage,0)
           #
+          if(mode_hypothese()==FALSE){
           if(id %in% indices_cliques()){
             removeElement(id)
             modif_matrice(i-decallage, j-decallage, 0)
@@ -256,20 +263,25 @@ server <- function(input, output) {
             print(mat)
             print(true_matrice)
             print(mat[i-decallage,j-decallage])
-          }
-        })
-          if (mode_hypothese()==FALSE) {
-          print(paste0(i-decallage, j-decallage))
-          #case<-
-          indices_cliques(c(indices_cliques(), paste0("button_", i, "_", j)))
-          modif_matrice(i-decallage, j-decallage, 1)
-          #print(typeof(your_matrice))
-          mat <- your_matrice()
-          print(mat)
-          print(true_matrice)
-        }
+          }}
+        #})
+        #   if (mode_hypothese()==FALSE) {
+        #   print(paste0(i-decallage, j-decallage))
+        #   #case<-
+        #   indices_cliques(c(indices_cliques(), paste0("button_", i, "_", j)))
+        #   modif_matrice(i-decallage, j-decallage, 1)
+        #   #print(typeof(your_matrice))
+        #   mat <- your_matrice()
+        #   print(mat)
+        #   print(true_matrice)
+        # }
           else if(mode_hypothese()){
-            indices_hyp(c(indices_hyp(), paste0("button_", i, "_", j)))
+            if(id %in% indices_hyp()){
+              removeHyp(id)
+              }
+            else {
+              indices_hyp(c(indices_hyp(), paste0("button_", i, "_", j)))
+              }
           }
           }
         )
