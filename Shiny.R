@@ -29,8 +29,10 @@ ui <- fluidPage(
             step = 1
           ),
           br(),
-          actionButton('replay', "Rejouer"),
+          actionButton('replay1', "Rejouer avec la même grille"),
+          actionButton('replay2', "Rejouer avec une autre grille"),
           br(),
+          hr(),
           actionButton('verification','Verification'),
 
           hr(),
@@ -293,7 +295,59 @@ server <- function(input, output) {
       }
       else output$verif<-renderText("Perdu !")
     })
+  
+    observeEvent(input$replay1,{
+      your_matrice(matrix(0, nrow = input$taille, ncol = input$taille))
+      indices_cliques(list())
+      indices_hyp(list())
+    })
+    
+    observeEvent(input$replay2,{
+      if(input$diff1=="Facile"){true_matrice<-picross_grid(input$taille,0.25,0.75)}
+        else {if(input$diff1=="Normal"){true_matrice<-picross_grid(input$taille,0.5,0.5)}
+          else { if(input$diff1=="Difficile"){true_matrice <- picross_grid(input$taille,0.6,0.4)}
+            else {true_matrice<-picross_grid(input$taille,0.75,0.25)}}}
+        your_matrice(matrix(0, nrow = input$taille, ncol = input$taille))
+        indices_cliques(list())
+        indices_hyp(list())
+        
+        lapply(3:(taille), function(i) {
+          lapply(1:(taille), function(j) {
+            observeEvent(input[[paste0("button_", i, "_", j)]], {
+              id<-paste0("button_", i, "_", j)
+              print(paste0(i-decallage, j-decallage))
+              if(mode_hypothese()==FALSE){
+                if(id %in% indices_cliques()){
+                  removeElement(id)
+                  modif_matrice(i-decallage, j-decallage, 0)
+                  mat <- your_matrice()
+                  print(mat)
+                }
+                else{
+                  indices_cliques(c(indices_cliques(), paste0("button_", i, "_", j)))
+                  modif_matrice(i-decallage, j-decallage, 1)
+                  mat <- your_matrice()
+                  print(mat)
+                  print(true_matrice)
+                  print(mat[i-decallage,j-decallage])
+                }}
+              else if(mode_hypothese()){
+                if(id %in% indices_hyp()){
+                  removeHyp(id)
+                }
+                else {
+                  indices_hyp(c(indices_hyp(), paste0("button_", i, "_", j)))
+                }
+              }
+            }
+            )
+          })
+        })
+      })
+      
+    
   })
+
   
   ## idée: créer une liste réactive, stocker les indices cliqués dedans, pour chaque indice cliqué dans la
   ## liste on affecte la valeur 1 à your_matrice et le background-color black au boutton
