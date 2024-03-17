@@ -310,38 +310,48 @@ server <- function(input, output) {
         your_matrice(matrix(0, nrow = input$taille, ncol = input$taille))
         indices_cliques(list())
         indices_hyp(list())
+        print(true_matrice)
         
-        lapply(3:(taille), function(i) {
-          lapply(1:(taille), function(j) {
-            observeEvent(input[[paste0("button_", i, "_", j)]], {
-              id<-paste0("button_", i, "_", j)
-              print(paste0(i-decallage, j-decallage))
-              if(mode_hypothese()==FALSE){
-                if(id %in% indices_cliques()){
-                  removeElement(id)
-                  modif_matrice(i-decallage, j-decallage, 0)
-                  mat <- your_matrice()
-                  print(mat)
+        output$grid <- renderUI({
+          grid <- matrix(
+            lapply(1:(taille ^ 2), function(i) {
+              ligne <- floor((i - 1) / taille) + 1
+              colonne <- (i - 1) %% taille + 1
+              zone_morte <- ((ligne %in% 1:decallage && colonne %in% 1:decallage))
+              zone_ligne <- (ligne %in% (decallage+1):taille && colonne %in% 1:decallage)
+              id <- paste0("button_", ligne, "_", colonne)
+              zone_colonne <- (colonne %in% (decallage+1):taille && ligne %in% 1:decallage)
+              
+              actionButton(
+                inputId = id,
+                label = if(zone_ligne) { count1row(ligne - decallage, true_matrice)[colonne] }
+                else if(zone_colonne) { count1col(colonne - decallage, true_matrice)[ligne] }
+                else { "" },
+                style = if (id %in% indices_cliques()) {
+                  "width: 25px; height: 25px; margin: 0px; padding:0px; background-color: black;"
+                } else if (id %in% indices_hyp()) {
+                  "width: 25px; height: 25px; margin: 0px; padding:0px; background-color: blue;"
+                } else {
+                  if (((ligne %in% (decallage + 1):taille && colonne %in% 1:decallage) ||
+                       (ligne %in% 1:decallage && colonne %in% (decallage + 1):taille))) {
+                    "width: 25px; height: 25px; margin: 0px; padding: 0px; text-align: center; border: none;"
+                  } else {
+                    if (zone_morte) {
+                      "width: 25px; height: 25px; margin: 0px; padding:0px; border: none;"
+                    } else "width: 25px; height: 25px; margin: 0px; padding:0px;"
+                  }
                 }
-                else{
-                  indices_cliques(c(indices_cliques(), paste0("button_", i, "_", j)))
-                  modif_matrice(i-decallage, j-decallage, 1)
-                  mat <- your_matrice()
-                  print(mat)
-                  print(true_matrice)
-                  print(mat[i-decallage,j-decallage])
-                }}
-              else if(mode_hypothese()){
-                if(id %in% indices_hyp()){
-                  removeHyp(id)
-                }
-                else {
-                  indices_hyp(c(indices_hyp(), paste0("button_", i, "_", j)))
-                }
-              }
-            }
-            )
+              )
+            }),
+            nrow = taille,
+            ncol = taille,
+            byrow = TRUE
+          )
+          
+          grid_list <- lapply(1:taille, function(i) {
+            fluidRow(do.call(tagList, grid[i, ]))
           })
+          do.call(tagList, grid_list)
         })
       })
       
