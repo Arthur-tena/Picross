@@ -3,7 +3,7 @@ library(shinythemes)
 
 ui <- fluidPage(
   shinythemes::themeSelector(),
-  titlePanel("Grille Cliquable"),
+  titlePanel("Picross"),
   sidebarLayout(
     sidebarPanel(
       tabsetPanel(
@@ -86,6 +86,7 @@ Ce mode vous permet de partir d'une hypothèse afin de progresser dans la résol
 
 
 server <- function(input, output) {
+  
   indices_cliques <- reactiveVal(list())
   indices_hyp <- reactiveVal(list())
   mode_hypothese <- reactiveVal(FALSE) 
