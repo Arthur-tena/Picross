@@ -86,73 +86,12 @@ Ce mode vous permet de partir d'une hypothèse afin de progresser dans la résol
 
 
 server <- function(input, output) {
-  
+  source("fonction.R")
   indices_cliques <- reactiveVal(list())
   indices_hyp <- reactiveVal(list())
   mode_hypothese <- reactiveVal(FALSE) 
   
   observe({
-    count1row<-function(row,M){
-      n <- dim(M)[1]
-      m <- floor(n/2 +1)
-      s=0
-      rep<-c()
-      for(j in 1:n){
-        if(M[row,j]==1){if(j==n){s=s+1
-        rep=c(rep,s)}
-          else{s=s+1}
-        }
-        if(M[row,j]==0){
-          if(s!=0){rep=c(rep,s)
-          s=0}
-        }
-      }
-      if(length(rep)==m){return(paste0(rep))}
-      else {
-        for(i in 1:(m-length(rep))){
-          rep<-c("",rep)
-        }
-        return(paste0(rep))
-      }
-    }
-    
-    
-    count1col<-function(col,M){
-      n<-dim(M)[1]
-      m<-floor(n/2 +1)
-      s=0
-      rep=c()
-      for(i in 1:n){
-        if(M[i,col]==1){if(i==n){s=s+1
-        rep=c(rep,s)}
-          else{s=s+1}
-        }
-        if(M[i,col]==0){
-          if(s!=0){rep=c(rep,s)
-          s=0}
-        }
-      }
-      if(length(rep)==m){return(paste0(rep))}
-      else {
-        for(i in 1:(m-length(rep))){
-          rep<-c("",rep)
-        }
-        return(paste0(rep))
-      }
-    }
-    
-    comparaison <- function(M,Q){
-      if(dim(M)[1]!=dim(Q)[1] || dim(M)[2] != dim(Q)[2]){return("les matrices ne sont pas de même dimension")}
-      else {
-        result=TRUE
-        for(i in 1: dim(M)[1]){
-          for(j in 1:dim(M)[2]){
-            if(M[i,j]!=Q[i,j]){result = FALSE}
-          }
-        }
-        return(result)}
-    }
-    
     if(input$diff1=="Facile"){true_matrice<-picross_grid(input$taille,0.25,0.75)}
     else {if(input$diff1=="Normal"){true_matrice<-picross_grid(input$taille,0.5,0.5)}
       else { if(input$diff1=="Difficile"){true_matrice <- picross_grid(input$taille,0.6,0.4)}
@@ -246,11 +185,6 @@ server <- function(input, output) {
         observeEvent(input[[paste0("button_", i, "_", j)]], {
           id<-paste0("button_", i, "_", j)
           print(paste0(i-decallage, j-decallage))
-          #case<-
-          #indices_cliques(indices_cliques()[-which(indices_cliques() == paste0("button_", i))])
-          # indices_cliques(indices_cliques()[-which(indices_cliques()==paste0("button_", i, "_", j))])
-          # modif_matrice(i-decallage,j-decallage,0)
-          #
           if(mode_hypothese()==FALSE){
           if(id %in% indices_cliques()){
             removeElement(id)
@@ -267,17 +201,6 @@ server <- function(input, output) {
             print(true_matrice)
             print(mat[i-decallage,j-decallage])
           }}
-        #})
-        #   if (mode_hypothese()==FALSE) {
-        #   print(paste0(i-decallage, j-decallage))
-        #   #case<-
-        #   indices_cliques(c(indices_cliques(), paste0("button_", i, "_", j)))
-        #   modif_matrice(i-decallage, j-decallage, 1)
-        #   #print(typeof(your_matrice))
-        #   mat <- your_matrice()
-        #   print(mat)
-        #   print(true_matrice)
-        # }
           else if(mode_hypothese()){
             if(id %in% indices_hyp()){
               removeHyp(id)
@@ -292,9 +215,9 @@ server <- function(input, output) {
     })
     observeEvent(input$verification,{
       if(comparaison(true_matrice,your_matrice())){
-        output$verif<-renderText({"Bravo !"})
+        output$verif<-modalDialog(title="C'est gagné !", size="m", easyClose=T)
       }
-      else output$verif<-renderText("Perdu !")
+      else output$verif<-modalDialog(title="C'est Perdu, big L !", size="m", easyClose=T)
     })
   
     observeEvent(input$replay1,{
@@ -377,6 +300,8 @@ server <- function(input, output) {
   
 }
 
+picross=function(){
+  shinyApp(ui, server)
+}
 
-shinyApp(ui, server)
-
+picross()
