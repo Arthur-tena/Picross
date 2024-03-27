@@ -1,0 +1,16 @@
+Package: Picross
+Type: Package
+Title: Picross
+Version: 0.1.0
+Author: Who wrote it
+Maintainer: The package maintainer <yourself@somewhere.net>
+Description: Ce package vous permettra de jouer au jeu Picross sur R avec un interface shiny.
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+Authors@R: 
+    "Arthur Tena", "Abel Silly", "arthur.tena@etu.umontpellier.fr" "abel.silly@etu.umontpellier.fr", role = c("aut", "cre"))
+Language: fr
+Imports: 
+    shiny,
+    shinythemes
